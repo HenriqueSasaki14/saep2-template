@@ -1,5 +1,5 @@
-const express = require('express');
-const conexao = require('../config/db');
+import express from 'express';
+import conexao from '../config/db.js';
 
 const router = express.Router();
 
@@ -21,14 +21,14 @@ router.post('/add_produto', async (req, res) => {
   }
 
   try {
-    const [resultado] = await conexao.query(
-      'INSERT INTO produto (nome, descricao, valor_unitario, quantidade) VALUES (?, ?, ?, ?)',
+    const { rows } = await conexao.query(
+      'INSERT INTO produto (nome, descricao, valor_unitario, quantidade) VALUES ($1, $2, $3, $4) RETURNING id_produto',
       [nome, descricao || null, Number(valor), Number(quantidade)]
     );
 
     return res.status(201).json({
       mensagem: 'Produto cadastrado com sucesso',
-      id_produto: resultado.insertId
+      id_produto: rows[0].id_produto
     });
   } catch (erro) {
     console.log(erro);
@@ -38,7 +38,7 @@ router.post('/add_produto', async (req, res) => {
 
 router.get('/listar_produtos', async (req, res) => {
   try {
-    const [produtos] = await conexao.query(
+    const { rows: produtos } = await conexao.query(
       'SELECT id_produto, nome, descricao, valor_unitario, quantidade, data_cadastro FROM produto'
     );
 
@@ -57,8 +57,8 @@ router.get('/listar_produto/:id', async (req, res) => {
   }
 
   try {
-    const [produtos] = await conexao.query(
-      'SELECT id_produto, nome, descricao, valor_unitario, quantidade, data_cadastro FROM produto WHERE id_produto = ?',
+    const { rows: produtos } = await conexao.query(
+      'SELECT id_produto, nome, descricao, valor_unitario, quantidade, data_cadastro FROM produto WHERE id_produto = $1',
       [Number(id)]
     );
 
@@ -91,8 +91,8 @@ router.put('/atualizar_produto/:id', async (req, res) => {
   }
 
   try {
-    const [produtos] = await conexao.query(
-      'SELECT id_produto FROM produto WHERE id_produto = ?',
+    const { rows: produtos } = await conexao.query(
+      'SELECT id_produto FROM produto WHERE id_produto = $1',
       [Number(id)]
     );
 
@@ -101,7 +101,7 @@ router.put('/atualizar_produto/:id', async (req, res) => {
     }
 
     await conexao.query(
-      'UPDATE produto SET nome = ?, descricao = ?, valor_unitario = ?, quantidade = ? WHERE id_produto = ?',
+      'UPDATE produto SET nome = $1, descricao = $2, valor_unitario = $3, quantidade = $4 WHERE id_produto = $5',
       [nome, descricao || null, Number(valor), Number(quantidade), Number(id)]
     );
 
@@ -120,8 +120,8 @@ router.delete('/deletar_produto', async (req, res) => {
   }
 
   try {
-    const [movimentacoes] = await conexao.query(
-      'SELECT id_movimentacao FROM movimentacao WHERE id_produto = ?',
+    const { rows: movimentacoes } = await conexao.query(
+      'SELECT id_movimentacao FROM movimentacao WHERE id_produto = $1',
       [Number(id_produto)]
     );
 
@@ -129,12 +129,12 @@ router.delete('/deletar_produto', async (req, res) => {
       return res.status(409).json({ erro: 'O produto possui movimentacoes e nao pode ser removido' });
     }
 
-    const [resultado] = await conexao.query(
-      'DELETE FROM produto WHERE id_produto = ?',
+    const resultado = await conexao.query(
+      'DELETE FROM produto WHERE id_produto = $1',
       [Number(id_produto)]
     );
 
-    if (resultado.affectedRows === 0) {
+    if (resultado.rowCount === 0) {
       return res.status(404).json({ erro: 'Produto nao encontrado' });
     }
 
@@ -163,8 +163,8 @@ router.post('/movimentar_produto', async (req, res) => {
   }
 
   try {
-    const [produtos] = await conexao.query(
-      'SELECT id_produto, quantidade FROM produto WHERE id_produto = ?',
+    const { rows: produtos } = await conexao.query(
+      'SELECT id_produto, quantidade FROM produto WHERE id_produto = $1',
       [Number(id_produto)]
     );
 
@@ -173,12 +173,12 @@ router.post('/movimentar_produto', async (req, res) => {
     }
 
     await conexao.query(
-      'INSERT INTO movimentacao (id_produto, tipo, quantidade) VALUES (?, ?, ?)',
+      'INSERT INTO movimentacao (id_produto, tipo, quantidade) VALUES ($1, $2, $3)',
       [Number(id_produto), tipo, Number(quantidade)]
     );
 
     await conexao.query(
-      'UPDATE produto SET quantidade = quantidade + ? WHERE id_produto = ?',
+      'UPDATE produto SET quantidade = quantidade + $1 WHERE id_produto = $2',
       [Number(quantidade), Number(id_produto)]
     );
 
@@ -194,7 +194,7 @@ router.post('/movimentar_produto', async (req, res) => {
 
 router.get('/listar_movimentacoes', async (req, res) => {
   try {
-    const [movimentacoes] = await conexao.query(
+    const { rows: movimentacoes } = await conexao.query(
       'SELECT m.id_movimentacao, m.id_produto, p.nome, m.tipo, m.quantidade ' +
       'FROM movimentacao m ' +
       'INNER JOIN produto p ON p.id_produto = m.id_produto ' +
@@ -208,4 +208,4 @@ router.get('/listar_movimentacoes', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

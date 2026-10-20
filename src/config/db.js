@@ -1,13 +1,15 @@
-const mysql = require('mysql2');
-require('dotenv').config();
+import 'dotenv/config';
+import pg from 'pg';
 
-const conexao = mysql.createPool({
+const { Pool } = pg;
+
+const conexao = new Pool({
   host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
+  port: Number(process.env.DB_PORT) || 5432,
+  user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'empresa',
-  waitForConnections: true,
-  connectionLimit: 10
+  max: 10
 });
 
-module.exports = conexao.promise();
+export default conexao;

@@ -1,6 +1,6 @@
 # Controle de Estoque - Projeto Base SAEP
 
-API em Node.js, Express e MySQL para controle de produtos e movimentacoes de estoque.
+API em Node.js, Express e PostgreSQL para controle de produtos e movimentacoes de estoque.
 
 Este e o projeto base entregue na avaliacao. Ele esta funcional, porem com toda a
 logica (validacoes, regras e SQL) concentrada em um unico arquivo de rotas.
@@ -12,7 +12,7 @@ infra/
   bd.sql                      Script de criacao do banco e dados iniciais
 src/
   config/
-    db.js                     Conexao com o MySQL
+    db.js                     Conexao com o PostgreSQL
   routes/
     estoque.routes.js         Rotas, validacoes, regras e SQL
   server.js                   Inicializacao do servidor
@@ -30,11 +30,7 @@ README.md
 npm install
 ```
 
-2. Crie o banco de dados:
-
-```bash
-mysql -u root -p < infra/bd.sql
-```
+2. No pgAdmin, crie o banco `empresa` (botao direito em Databases > Create > Database). Abra a Query Tool conectada a esse banco e execute o script `infra/bd.sql`.
 
 3. Configure as variaveis de ambiente:
 
@@ -45,10 +41,13 @@ cp .env.example .env
 ```env
 PORT=3000
 DB_HOST=localhost
-DB_USER=root
+DB_PORT=5432
+DB_USER=postgres
 DB_PASSWORD=
 DB_NAME=empresa
 ```
+
+Use em `DB_PASSWORD` a senha definida na instalacao do PostgreSQL.
 
 4. Inicie a API:
 
