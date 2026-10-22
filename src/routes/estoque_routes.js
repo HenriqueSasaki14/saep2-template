@@ -7,7 +7,13 @@ const router = express.Router();
 // USUARIOS
 // ---------------------------------------------------------------------------
 
+router.post('/add_user', async (req, res) => {
+  const {nome, senha, cargo} = req.body;
 
+  if (!nome || nome.trim() === '') {
+    return res.status(422).json({ erro: 'O campo nome e obrigatorio' });
+  }
+})
 
 
 
